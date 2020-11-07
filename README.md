@@ -1,4 +1,7 @@
-#AbstractCP -- Abstract Class Property
+# AbstractCP -- Abstract Class Property
+
+![Tox tests](https://github.com/reinhrst/abstractcp/workflows/Tox%20tests/badge.svg)
+
 
 This package allows one to create classes with abstract class properties.
 The initial code was inspired by [this question][1] (and accepted answer) -- in
