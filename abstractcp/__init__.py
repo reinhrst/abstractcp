@@ -8,15 +8,18 @@ try:
 except DistributionNotFound:
     VERSION = __project__ + '-' + '(local)'
 
-class AbstractProperty:
+T = t.TypeVar('T')
+
+class _AbstractClassProperty(t.Generic[T]):
     """
     Defines a class property as abstract
     """
     __name__: str
     __containg_klass_name__: str
+    __propertytype_name__: str
 
-    def __new__(cls):
-        return object.__new__(cls)
+    def __init__(self, propertytype: t.Type[T]):
+        object.__setattr__(self, "__propertytype_name__", str(propertytype))
 
     def __set_name__(self, containg_klass: t.Type, name: str):
         if Abstract not in containg_klass.__bases__:
@@ -29,122 +32,81 @@ class AbstractProperty:
             self, "__containing_klass_name__", containg_klass.__name__)
 
     def raise_use(self, *args, **kwargs):
-        if "__name__" not in dir(self):
-            breakpoint()
+        # get these the hard way to avoid infinite recursion
+        name = object.__getattribute__(self, "__name__")
+        containg_klass_name = object.__getattribute__(
+            self, "__containing_klass_name__")
         raise TypeError(
-            f"Trying to use property {self.__name__} on "
-            f"{self.__containing_klass_name__}. This is an abstract property.")
+            f"Trying to use property {name} on "
+            f"{containg_klass_name}. This is an abstract property.")
 
     def raise_use_compare(self, other) -> bool:
         # compare methods seem to need this exact interface
         self.raise_use()
         return False  # will never reach, but makes mypy happy
 
+    def __repr__(self):
+        return f"{type(self).__name__}({self.__propertytype_name__}) on " \
+            f"{self.__containing_klass_name__}.{self.__name__}"
+
     def __getattr__(self, name):
-        # necessary for generics (and possibly other tools)
-        if name.startswith("__"):
-            return super().__getattr__(name)
         self.raise_use()
 
     def __setattr__(self, name, value):
-        # necessary for generics (and possibly other tools)
-        if name.startswith("__"):
-            return super().__setattr__(name, value)
         self.raise_use()
 
-    # math
-    __add__ = __sub__ = __mul__ = __matmul__ = __truediv__ = raise_use
-    __floordiv__ = __mod__ = __divmod__ = __pow__ = __lshift__ = raise_use
-    __rshift__ = __and__ = __xor__ = __or__ = raise_use
+    # disable hashing
+    __hash__ = None  # type: ignore
 
-    # right math
-    __radd__ = __rsub__ = __rmul__ = __rmatmul__ = __rtruediv__ = raise_use
-    __rfloordiv__ = __rmod__ = __rdivmod__ = __rpow__ = __rlshift__ = raise_use
-    __rrshift__ = __rand__ = __rxor__ = __ror__ = raise_use
-
-    # unary
-    __hash__ = raise_use
-    __neg__ = __pos__ = __abs__ = __invert__ = raise_use
-    __round__ = __trunc__ = __floor__ = __ceil__ = raise_use
+    # next we override some of the default methods on an object that could
+    # possibly be used accidentally (and give a non-error result):
 
     # compare
     __eq__ = __ne__ = __lt__ = __le__ = __gt__ = __ge__ = raise_use_compare
 
-    # convert
-    __complex__ = __int__ = __float__ = __bool__ = __bytes__ = raise_use
+    # We only need to take care of __bool__ and __str__ since they give a result
+    # on object()
+    __bool__ = __str__ = raise_use
 
-    # We also mask __str__, even though this may be used for debugging
-    # If necessary for debugging, use repr() instead
-    __str__ = raise_use
+def abstract_class_property(propertytype: t.Type[T]) -> T:
+    """
+    Define an abstract class property of the given type
+    """
+    # Note that t.cast doesn't actually do anything at runtime
+    return t.cast(T, _AbstractClassProperty(propertytype))
 
-T = t.TypeVar('T')
-KT = t.TypeVar('KT')
-VT = t.TypeVar('VT')
-
-if t.TYPE_CHECKING:
-    AbstractInt = int
-    AbstractFloat = float
-    AbstractStr = str
-    AbstractSequence = t.Sequence
-    AbstractMapping = t.Mapping
-    AbstractSet = t.Set
-    AbstractFrozenSet = t.FrozenSet
-else:
-    class AbstractInt(AbstractProperty):
-        __index__ = AbstractProperty.raise_use
-
-    class AbstractFloat(AbstractProperty):
-        pass
-
-    class AbstractStr(AbstractProperty):
-        __getitem__ = __setitem__ = AbstractProperty.raise_use
-        __format__ = AbstractProperty.raise_use
-        __iter__ = __len__ = AbstractProperty.raise_use
-        __reversed__ = __contains__ = AbstractProperty.raise_use
-
-    # inherit from the generic type, so that generics can be used,
-    # e.g. AbstractSequence[int]
-    class AbstractSequence(t.Generic[T], AbstractProperty):
-        __getitem__ = __setitem__ = AbstractProperty.raise_use
-        __iter__ = __len__ = AbstractProperty.raise_use
-        __reversed__ = __contains__ = AbstractProperty.raise_use
-
-    class AbstractMapping(t.Generic[KT, VT], AbstractProperty):
-        __getitem__ = __setitem__ = AbstractProperty.raise_use
-        __iter__ = __len__ = AbstractProperty.raise_use
-        __reversed__ = __contains__ = AbstractProperty.raise_use
-
-    class AbstractSet(t.Generic[T], AbstractProperty):
-        __getitem__ = __setitem__ = AbstractProperty.raise_use
-        __iter__ = __len__ = AbstractProperty.raise_use
-        __reversed__ = __contains__ = AbstractProperty.raise_use
-
-    class AbstractFrozenSet(t.Generic[T], AbstractProperty):
-        __getitem__ = __setitem__ = AbstractProperty.raise_use
-        __iter__ = __len__ = AbstractProperty.raise_use
-        __reversed__ = __contains__ = AbstractProperty.raise_use
 
 class Abstract:
     """
     Only direct inheritance from this class makes subclasses abstract.
 
     Use:
-    class A(Abstract):
-        x: int = Abstract.ClassProperty()
-        y: int = Abstract.ClassProperty()
+    class A(acp.Abstract):
+        x: int = acp.abstract_class_property(int)
+        y: str = acp.abstract_class_property(str)
 
     class B(A):
-        x: Final = 1
-        y: Final = 2
+        x: t.Literal[1] = 1
+        y: t.Literal["spam"] = "spam"
     """
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        if Abstract not in cls.__bases__:
+        if Abstract in cls.__bases__:
+            # Direct descendant. Make sure that at least one property is
+            # actually abstract
+            for name in dir(cls):
+                if isinstance(getattr(cls, name), _AbstractClassProperty):
+                    break
+            else:
+                raise TypeError(
+                    f"Class {cls.__name__} is defined as abstract but does not "
+                    "have any abstract class properties defined.")
+        else:
             # Any class that does not have Abstract as direct parent, is
             # assumed to be non-abstract, and therefore should have all
             # properties defined
             for name in dir(cls):
-                if isinstance(getattr(cls, name), AbstractProperty):
+                if isinstance(getattr(cls, name), _AbstractClassProperty):
                     raise TypeError(
                         f"Class {cls.__name__} must define abstract class "
                         f"property {name}, or have Abstract as direct parent.")

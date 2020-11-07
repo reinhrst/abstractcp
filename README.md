@@ -28,7 +28,7 @@ In addition, for python < 3.8, the `Literal` type hint can be found in
 
 ```python
 class Parser(acp.Abstract):
-    PATTERN: str = acp.AbstractStr()
+    PATTERN: str = acp.abstract_class_property(str)
 
     @classmethod
     def parse(cls, s):
@@ -52,7 +52,7 @@ Example with (more) type hints:
 ```python
 class Array(acp.Abstract):
     payload: np.ndarray
-    DIMENSIONS: int = acp.AbstractInt()
+    DIMENSIONS: int = acp.abstract_class_property(int)
 
     def __init__(self, payload):
         assert len(payload) == type(self).DIMENSIONS
@@ -83,38 +83,6 @@ class OtherVector(OtherArray):
     DIMENSIONS = 1
 ```
 
-The following abstract types have been defined:
-```python
-AbstractProperty()
-AbstractInt()
-AbstractFloat()
-AbstractStr()
-AbstractSequence()
-AbstractMapping()
-AbstractSet()
-AbstractFrozenSet()
-```
-The different types all inherit from `AbstractProperty()`, and are mostly useful
-to make sure the typehints keep working well. For a type checker, `AbstractInt()` looks the same as `int`, and therefore there are no issues if this field is used as in int everywhere.
-Some types have generics:
-```python
-class A(acp.Abstract):
-     mymap = acp.AbstractMapping[str, str]()
-
-class B(A):
-    mymap = {"spam": "eggs"}
-```
-
-In order to make custom Abstract Properties:
-```python
-if t.TYPE_CHECKING:
-    AbstractDType = np.dtype
-else:
-    class AbstractDType(acp.AbstractProperty):
-        pass
-```
-
-
 ## Introduction
 I quite often find myself in a situation where I want to store some configuration in a class-variable, so that I can get different behaviour in different subclasses.
 Quite often this starts with a top-level base class that has the methods, but without a reasonable value to use in the configuration.
@@ -143,25 +111,30 @@ pip install abstractcp
 The system consists of 2 elements: The `Abstract` base class.
 Each class that is abstract (i.e. that has abstract class properties -- this is completely independent of the ways to make a class abstract in `abc`) must inherit _directly_ from `Abstract`, meaning that `Abstract` should be a direct parent. This is done so that it's explicit which classes are abstract (and hence, we can throw an error if a class is abstract and does not inherit _directly_ from `Abstract`).
 
-The second part of the system are the `AbstractProperty` classes.
-Every abstract class property gets assigned an `AbstractProperty()` instance.
-Note that this can only be done in classes that have `Abstract` as a direct parent.
+The second part of the system is the `_AbstractClassProperty` class.
+Every abstract class property gets assigned an `_AbstractClassProperty()` instance, through the `acp.abstract_class_property(...)` method. Note that this method has typehints to  return the exact class that you provide, so from a type checker point of view, `acp.abstract_class_property(int)` is identical to `3` (or `4`, or any other `int` instance). This means that we can be more flexible here, for instance doing `acp.abstract_class_property(t.Dict[str, int])`, however note that `acp.abstract_class_property(t.Mapping[str, int])` does not work, since mypy wants a concrete type there.
 
-The module comes with a number of additional `AbstractProperty` subclasses for specific types of abstract properties.
-Note that is is mostly of use for those using type hints and static type checkers.
+Note that `abstract_class_property()` can only be assigned in classes that have `Abstract` as direct parent.
 
-```python
-AbstractProperty()
-AbstractInt()
-AbstractFloat()
-AbstractStr()
-AbstractSequence()
-AbstractMapping()
-AbstractSet()
-AbstractFrozenSet()
-```
 
 See the Examples section above for exact use.
+
+## Update from 0.9.1
+Note that since 0.9.1 the syntax has changed a bit.
+Rather than writing:
+```python
+class A(acp.Abstract):
+   i = acp.AbstractInt()
+```
+
+you now use
+
+```python
+class A(acp.Abstract):
+   i = acp.abstract_class_property(int)
+```
+
+It results in cleaner code, and also means that we don't have to make our own classes for new types.
 
 
 [1]: https://stackoverflow.com/questions/45248243/most-pythonic-way-to-declare-an-abstract-class-property

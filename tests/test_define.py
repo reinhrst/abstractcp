@@ -13,12 +13,12 @@ except AttributeError:
 
 def test_create_abstractcp():
     class A(acp.Abstract):
-        i: int = acp.AbstractInt()
+        i: int = acp.abstract_class_property(int)
 
 def test_forget_abstract_inherit():
     with pytest.raises(RuntimeError, match="Error calling __set_name__") as e:
         class A():
-            i: int = acp.AbstractInt()
+            i: int = acp.abstract_class_property(int)
     exc: Exception = e._excinfo[1]
     cause: Exception = exc.__cause__
     assert isinstance(cause, TypeError)
@@ -28,21 +28,21 @@ def test_forget_abstract_inherit():
 
 def test_subclass_also_abstract():
     class A(acp.Abstract):
-        i: int = acp.AbstractInt()
+        i: int = acp.abstract_class_property(int)
 
     class B(A, acp.Abstract):
         pass
 
 def test_subclass_not_abstract():
     class A(acp.Abstract):
-        i: int = acp.AbstractInt()
+        i: int = acp.abstract_class_property(int)
 
     class B(A):
         i: Literal[3] = 3
 
 def test_subclass_also_abstract_no_direct_descendant():
     class A(acp.Abstract):
-        i: int = acp.AbstractInt()
+        i: int = acp.abstract_class_property(int)
 
     with pytest.raises(TypeError, match=(
             "Class B must define abstract class property i, "
@@ -52,23 +52,29 @@ def test_subclass_also_abstract_no_direct_descendant():
 
 def test_multi_level_subclass():
     class A(acp.Abstract):
-        a: int = acp.AbstractInt()
+        a: int = acp.abstract_class_property(int)
 
     class B(A, acp.Abstract):
-        b: t.Sequence[int] = acp.AbstractSequence[int]()
+        b: t.Sequence[int] = acp.abstract_class_property(t.Sequence[int])
 
     class C(B, acp.Abstract):
         a: Literal[3] = 3
-        c: str = acp.AbstractStr()
+        c: str = acp.abstract_class_property(str)
 
     class D(C):
         b = (1, 2, 3)
         c: Literal["spam"] = "spam"
 
-    assert isinstance(A.a, acp.AbstractProperty)
+    assert isinstance(A.a, acp._AbstractClassProperty)
     with pytest.raises(TypeError):
         assert A.a == 3
     assert C.a == 3
     assert D.a == 3
     assert D.b == (1, 2, 3)
     assert D.c == "spam"
+
+def test_abstract_class_without_abstract_properties():
+    with pytest.raises(TypeError, match="Class A is defined as abstract but does "
+                       "not have any abstract class properties defined."):
+        class A(acp.Abstract):
+            i = 3
