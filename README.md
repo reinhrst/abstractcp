@@ -18,7 +18,7 @@ if you want that, please create an [issue on github][2].
 Note: the examples use [PEP-526 type hints][3]; this is obviously optional.
 
 All examples assume the following imports:
-```
+```python
 import tying as t
 import abstractcp as acp
 ```
@@ -26,7 +26,7 @@ Note that all typing (including the `import typing as t` is optional.
 In addition, for python < 3.8, the `Literal` type hint can be found in
 `typing_extensions`.
 
-```
+```python
 class Parser(acp.Abstract):
     PATTERN: str = acp.AbstractStr()
 
@@ -49,7 +49,7 @@ class SpamParser(Parser):
 ```
 
 Example with (more) type hints:
-```
+```python
 class Array(acp.Abstract):
     payload: np.ndarray
     DIMENSIONS: int = acp.AbstractInt()
@@ -68,14 +68,14 @@ This is allowed in mypy (however it may actually be a bug that it's allowed).
 It would possibly feel more natural to use a `t.Final` here, however mypy doesn't allow this.
 
 Note that if we forget to assign a value for DIMENSIONS, an error will occur:
-```
+```python
 class OtherArray(Array):
     pass
 
 > TypeError: Class OtherArray must define abstract class property DIMENSIONS, or have Abstract as direct parent
 ```
 In some cases, however, we might indeed intend for the `OtherArray` class to be abstract as well (because we will subclass this later). If so, make OtherArray inherit from Abstract directly to fix this:
-```
+```python
 class OtherArray(Array, acp.Abstract):
    ...
 
@@ -84,7 +84,7 @@ class OtherVector(OtherArray):
 ```
 
 The following abstract types have been defined:
-```
+```python
 AbstractProperty()
 AbstractInt()
 AbstractFloat()
@@ -97,7 +97,7 @@ AbstractFrozenSet()
 The different types all inherit from `AbstractProperty()`, and are mostly useful
 to make sure the typehints keep working well. For a type checker, `AbstractInt()` looks the same as `int`, and therefore there are no issues if this field is used as in int everywhere.
 Some types have generics:
-```
+```python
 class A(acp.Abstract):
      mymap = acp.AbstractMapping[str, str]()
 
@@ -106,7 +106,7 @@ class B(A):
 ```
 
 In order to make custom Abstract Properties:
-```
+```python
 if t.TYPE_CHECKING:
     AbstractDType = np.dtype
 else:
@@ -135,7 +135,7 @@ I had some clear requirements in mind when writing this package:
 
 ## Installation
 The package is a 100% python package. Installation is as simple as
-```
+```bash
 pip install abstractcp
 ```
 
@@ -150,7 +150,7 @@ Note that this can only be done in classes that have `Abstract` as a direct pare
 The module comes with a number of additional `AbstractProperty` subclasses for specific types of abstract properties.
 Note that is is mostly of use for those using type hints and static type checkers.
 
-```
+```python
 AbstractProperty()
 AbstractInt()
 AbstractFloat()
