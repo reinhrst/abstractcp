@@ -3,7 +3,6 @@ import typing as t
 from pkg_resources import get_distribution, DistributionNotFound
 
 __project__ = __name__
-print(__name__)
 try:
     __version__ = get_distribution(__project__).version
 except DistributionNotFound:
