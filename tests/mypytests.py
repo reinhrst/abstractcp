@@ -34,3 +34,10 @@ require_str(C.s)
 
 require_int(A.m["eggs"])
 require_str(list(A.m.keys())[0])
+
+T = t.TypeVar("T", int, str)
+
+class AA(t.Generic[T], acp.Abstract):
+    VALUE_TYPE: t.Type[T] = acp.abstract_class_property(t.cast(t.Type[t.Type[T]], "union of int and str"))
+    def to_value(self) -> T:
+        ...

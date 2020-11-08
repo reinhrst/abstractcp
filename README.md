@@ -137,6 +137,23 @@ class A(acp.Abstract):
 It results in cleaner code, and also means that we don't have to make our own classes for new types.
 
 
+## FAQ
+
+### I'm getting `Argument 1 to "abstract_class_property" has incompatible type "object"; expected "Type[<nothing>]"` errors
+    his happens when you try to feed something that is not actually a type to abstract_class_property, for instance `x = acp.abstract_class_property(t.Union[str, int])` (or even, more correctly, `t.Type[t.Union[str, int]]` or `t.Union[t.Type[str], t.Type[int]]`. Also `x = acp.abstract_class_property(t.Type[Employee])`  will not work (since `t.Type` does not actually make something a type; in this case use `type(Employee)` instead (which would give you an abstract property that could receive some subclass of Employee).
+
+Note that the argument to `abstract_class_property` is only for readability and used in the `__repr__` of the `_AbstractClassProperty` class -- and for static typing. So as long as you satisfy static typing, all will be fine:
+
+```
+T = t.TypeVar("T", int, str)
+
+class A(t.Generic[T], acp.Abstract):
+    VALUE_TYPE: t.Type[T] = acp.abstract_class_property(t.cast(t.Type[t.Type[T]], "union of int and str"))
+    def to_value(self) -> T:
+        ...
+```
+Note the double `t.Type`, since acp.abstract_class_property will remove 1 t.Type.
+
 [1]: https://stackoverflow.com/questions/45248243/most-pythonic-way-to-declare-an-abstract-class-property
 [2]: https://github.com/reinhrst/abstractcp/issues/
 [3]: https://www.python.org/dev/peps/pep-0526/
