@@ -84,7 +84,7 @@ def test_combine_with_abc_ABC_first():
             ...
 
     with pytest.raises(TypeError, match=("Can't instantiate abstract class A "
-                                         "with abstract method foo")):
+                                         "with abstract method(?:s?) foo")):
         A()
 
 def test_combine_with_abc_ABC_second():
