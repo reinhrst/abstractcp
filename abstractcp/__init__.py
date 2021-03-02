@@ -50,6 +50,9 @@ class _AbstractClassProperty(t.Generic[T]):
             f"{self.__containing_klass_name__}.{self.__name__}"
 
     def __getattr__(self, name):
+        if name == "__isabstractmethod__":
+            # Fix for the case that also inherits from abc.ABC
+            raise AttributeError()
         self.raise_use()
 
     def __setattr__(self, name, value):
@@ -95,6 +98,10 @@ class Abstract:
             # Direct descendant. Make sure that at least one property is
             # actually abstract
             for name in dir(cls):
+                if name.startswith("__") and name.endswith("__"):
+                    # internal names are ignored since they may have magic attached
+                    # when accessing
+                    continue
                 if isinstance(getattr(cls, name), _AbstractClassProperty):
                     break
             else:

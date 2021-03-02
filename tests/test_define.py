@@ -73,6 +73,34 @@ def test_multi_level_subclass():
     assert D.b == (1, 2, 3)
     assert D.c == "spam"
 
+def test_combine_with_abc_ABC_first():
+    import abc
+
+    class A(abc.ABC, acp.Abstract):
+        i: int = acp.abstract_class_property(int)
+
+        @abc.abstractmethod
+        def foo(self):
+            ...
+
+    with pytest.raises(TypeError, match=("Can't instantiate abstract class A "
+                                         "with abstract method foo")):
+        A()
+
+def test_combine_with_abc_ABC_second():
+    import abc
+
+    class A(acp.Abstract, abc.ABC):
+        i: int = acp.abstract_class_property(int)
+
+        @abc.abstractmethod
+        def foo(self):
+            ...
+
+    with pytest.raises(TypeError, match=("Can't instantiate abstract class A "
+                                         "with abstract method foo")):
+        A()
+
 def test_abstract_class_without_abstract_properties():
     with pytest.raises(TypeError, match="Class A is defined as abstract but does "
                        "not have any abstract class properties defined."):
