@@ -113,6 +113,10 @@ class Abstract:
             # assumed to be non-abstract, and therefore should have all
             # properties defined
             for name in dir(cls):
+                if name.startswith("__") and name.endswith("__"):
+                    # internal names are ignored since they may have magic attached
+                    # when accessing
+                    continue
                 if isinstance(getattr(cls, name), _AbstractClassProperty):
                     raise TypeError(
                         f"Class {cls.__name__} must define abstract class "
