@@ -73,10 +73,12 @@ def test_multi_level_subclass():
     assert D.b == (1, 2, 3)
     assert D.c == "spam"
 
-def test_combine_with_abc_ABC_first():
+
+@pytest.mark.parametrize("inherit_order", [1, -1])
+def test_combine_with_abc_ABC(inherit_order):
     import abc
 
-    class A(abc.ABC, acp.Abstract):
+    class A(*((abc.ABC, acp.Abstract)[::inherit_order])):
         i: int = acp.abstract_class_property(int)
 
         @abc.abstractmethod
@@ -87,19 +89,24 @@ def test_combine_with_abc_ABC_first():
                                          "with abstract method(?:s?) foo")):
         A()
 
-def test_combine_with_abc_ABC_second():
-    import abc
+    with pytest.raises(TypeError, match=("Class B must define abstract class "
+                                         "property i, or have Abstract as "
+                                         "direct parent.")):
+        class B(A):
+            def foo(self):
+                pass
 
-    class A(acp.Abstract, abc.ABC):
-        i: int = acp.abstract_class_property(int)
+    class C(A):
+        i = 1
 
-        @abc.abstractmethod
         def foo(self):
-            ...
+            return True
 
-    with pytest.raises(TypeError, match=("Can't instantiate abstract class A "
-                                         "with abstract method(?:s?) foo")):
-        A()
+    c = C()
+    assert isinstance(c, A)
+    assert c.i == 1
+    assert c.foo()
+
 
 def test_abstract_class_without_abstract_properties():
     with pytest.raises(TypeError, match="Class A is defined as abstract but does "
