@@ -1,5 +1,6 @@
 import inspect
 import typing as t
+import warnings
 from pkg_resources import get_distribution, DistributionNotFound
 
 __project__ = __name__
@@ -9,6 +10,9 @@ except DistributionNotFound:
     VERSION = __project__ + '-' + '(local)'
 
 T = t.TypeVar('T')
+
+class AbstractClassWithoutAbstractPropertiesWarning(Warning):
+    pass
 
 class _AbstractClassProperty(t.Generic[T]):
     """
@@ -105,9 +109,9 @@ class Abstract:
                 if isinstance(getattr(cls, name), _AbstractClassProperty):
                     break
             else:
-                raise TypeError(
+                warnings.warn(AbstractClassWithoutAbstractPropertiesWarning(
                     f"Class {cls.__name__} is defined as abstract but does not "
-                    "have any abstract class properties defined.")
+                    "have any abstract class properties defined."))
         else:
             # Any class that does not have Abstract as direct parent, is
             # assumed to be non-abstract, and therefore should have all

@@ -109,7 +109,8 @@ def test_combine_with_abc_ABC(inherit_order):
 
 
 def test_abstract_class_without_abstract_properties():
-    with pytest.raises(TypeError, match="Class A is defined as abstract but does "
+    with pytest.warns(acp.AbstractClassWithoutAbstractPropertiesWarning,
+                      match="Class A is defined as abstract but does "
                        "not have any abstract class properties defined."):
         class A(acp.Abstract):
             i = 3

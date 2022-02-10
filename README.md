@@ -155,6 +155,30 @@ class A(t.Generic[T], acp.Abstract):
 ```
 Note the double `t.Type`, since acp.abstract_class_property will remove 1 t.Type.
 
+### Why am I getting warnings when I inherit a class from `acp.Asbtract` but don't define any abstract fields
+
+You will get a Python warning if you run the following code:
+
+```
+class A(acp.Abstract):
+   i = 3
+```
+
+You are defining class `A` to be abstract, however it has no fields with `abstract_class_property`.
+In almost all cases this means that either you should add an abstract class property, or remove the `acp.Abstract` inherritance.
+
+Defining a class like this used to result in a `TypeError` in versions <= 0.9.8, but is a warning from version 0.9.9 forward.
+
+You can safely ignore the warning (if you understand what you're doing; for instance if you just commented out the abstract class property during development for a moment), or if you really want to silence the warning forever in production code, add the following code to your program:
+
+```
+import warnings
+warnings.filterwarnings("ignore", category=acp.AbstractClassWithoutAbstractPropertiesWarning)
+```
+
+If you do this, I would appreciate if you drop me a line, since it probably means you've found a novel use for the package that I'd be happy to learn about (and possibly document).
+
+
 [1]: https://stackoverflow.com/questions/45248243/most-pythonic-way-to-declare-an-abstract-class-property
 [2]: https://github.com/reinhrst/abstractcp/issues/
 [3]: https://www.python.org/dev/peps/pep-0526/
