@@ -3,7 +3,7 @@ import setuptools  # type: ignore
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-VERSION = "0.9.9"
+VERSION = "1.0.0"
 
 setuptools.setup(
     name="abstractcp",
