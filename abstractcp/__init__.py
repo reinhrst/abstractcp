@@ -1,18 +1,19 @@
-import inspect
 import typing as t
 import warnings
-from pkg_resources import get_distribution, DistributionNotFound
+from importlib.metadata import version
 
 __project__ = __name__
 try:
-    __version__ = get_distribution(__project__).version
-except DistributionNotFound:
-    VERSION = __project__ + '-' + '(local)'
+    __version__ = version(__project__)
+except ImportError:
+    __version__ = __project__ + '-' + '(local)'
 
 T = t.TypeVar('T')
 
+
 class AbstractClassWithoutAbstractPropertiesWarning(Warning):
     pass
+
 
 class _AbstractClassProperty(t.Generic[T]):
     """
@@ -71,9 +72,10 @@ class _AbstractClassProperty(t.Generic[T]):
     # compare
     __eq__ = __ne__ = __lt__ = __le__ = __gt__ = __ge__ = raise_use_compare
 
-    # We only need to take care of __bool__ and __str__ since they give a result
-    # on object()
+    # We only need to take care of __bool__ and __str__ since they give a
+    # result on object()
     __bool__ = __str__ = raise_use
+
 
 def abstract_class_property(propertytype: t.Type[T]) -> T:
     """
@@ -103,23 +105,23 @@ class Abstract:
             # actually abstract
             for name in dir(cls):
                 if name.startswith("__") and name.endswith("__"):
-                    # internal names are ignored since they may have magic attached
-                    # when accessing
+                    # internal names are ignored since they may have magic
+                    # attached when accessing
                     continue
                 if isinstance(getattr(cls, name), _AbstractClassProperty):
                     break
             else:
                 warnings.warn(AbstractClassWithoutAbstractPropertiesWarning(
-                    f"Class {cls.__name__} is defined as abstract but does not "
-                    "have any abstract class properties defined."))
+                    f"Class {cls.__name__} is defined as abstract but does "
+                    "not have any abstract class properties defined."))
         else:
             # Any class that does not have Abstract as direct parent, is
             # assumed to be non-abstract, and therefore should have all
             # properties defined
             for name in dir(cls):
                 if name.startswith("__") and name.endswith("__"):
-                    # internal names are ignored since they may have magic attached
-                    # when accessing
+                    # internal names are ignored since they may have magic
+                    # attached when accessing
                     continue
                 if isinstance(getattr(cls, name), _AbstractClassProperty):
                     raise TypeError(

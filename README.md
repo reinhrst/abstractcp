@@ -5,14 +5,13 @@
 
 This package allows one to create classes with abstract class properties.
 The initial code was inspired by [this question][1] (and accepted answer) -- in
-addition to me strugling many time with the same issue in the past.
-I firtst wanted to just post this as separate answer, however since it includes quite
+addition to me struggling many time with the same issue in the past.
+I first wanted to just post this as separate answer, however since it includes quite
 some python magic, and I would like to include quite some tests (and possibly update
 the code in the future), I made it into a package (even though I'm not a big fan of
 small packages that hardly do anything).
 
-The package is python3.6 and higher. I could consider creating a version for pre-3.6;
-if you want that, please create an [issue on github][2].
+The package is python3.8 and higher (version 0.9.9 runs on 3.6-3.11).
 
 ## TL;DR Examples
 Note: the examples use [PEP-526 type hints][3]; this is obviously optional.
