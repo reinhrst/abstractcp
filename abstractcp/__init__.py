@@ -23,10 +23,10 @@ class _AbstractClassProperty(t.Generic[T]):
     __containg_klass_name__: str
     __propertytype_name__: str
 
-    def __init__(self, propertytype: t.Type[T]):
+    def __init__(self, propertytype: type[T]):
         object.__setattr__(self, "__propertytype_name__", str(propertytype))
 
-    def __set_name__(self, containg_klass: t.Type, name: str):
+    def __set_name__(self, containg_klass: type, name: str):
         if Abstract not in containg_klass.__bases__:
             raise TypeError(
                 f"Abstract class property {name} defined on non-abstract "
@@ -77,7 +77,7 @@ class _AbstractClassProperty(t.Generic[T]):
     __bool__ = __str__ = raise_use
 
 
-def abstract_class_property(propertytype: t.Type[T]) -> T:
+def abstract_class_property(propertytype: type[T]) -> T:
     """
     Define an abstract class property of the given type
     """
