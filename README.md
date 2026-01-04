@@ -11,7 +11,7 @@ some python magic, and I would like to include quite some tests (and possibly up
 the code in the future), I made it into a package (even though I'm not a big fan of
 small packages that hardly do anything).
 
-The package is python3.8 and higher (version 0.9.9 runs on 3.6-3.11).
+The package is python3.10 and higher (version 0.9.9 runs on 3.6-3.11, version 1.0.0 runs in 3.8 and higher).
 
 ## TL;DR Examples
 Note: the examples use [PEP-526 type hints][3]; this is obviously optional.

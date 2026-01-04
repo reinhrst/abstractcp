@@ -46,7 +46,7 @@ def test_convert(conversion, has_custom_error):
             conversion(A.i)
         e.match("Trying to use property i on A. This is an abstract property.")
     else:
-        with pytest.raises(TypeError, match="'_AbstractClassProperty'"):
+        with pytest.raises(TypeError, match="_AbstractClassProperty"):
             conversion(A.i)
 
 
