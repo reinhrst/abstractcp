@@ -4,3 +4,4 @@ __pycache__/
 .python-version
 /dist/
 /build/
+.venv/
