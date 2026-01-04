@@ -20,7 +20,7 @@ class _AbstractClassProperty(t.Generic[T]):
     Defines a class property as abstract
     """
     __name__: str
-    __containg_klass_name__: str
+    __containing_klass_name__: str
     __propertytype_name__: str
 
     def __init__(self, propertytype: type[T]):
